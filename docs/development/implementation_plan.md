@@ -38,10 +38,13 @@ This plan breaks the MVP into iterative, testable components, each building on t
 - **Description:**
   - Implement file and console logging using `logging` and `rich`.
   - Support verbosity flags and config-based log control.
-- **Dependencies:** Step 1
+- **Dependencies:** Steps 2, 3
 - **Acceptance Criteria:**
   - Logging works as per spec-logging.md and PRD (FR7)
   - Log output is testable and configurable
+- **Status:**
+  - Completed: [DATE]
+  - Summary: Added src/lmi/logging.py, integrated setup_logging in CLI, added CLI options for verbosity and file log control, ensured logs include timestamps, level, and source, and updated docs/tests as needed.
 
 ---
 
