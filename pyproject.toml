@@ -1,0 +1,15 @@
+[project]
+name = "lmi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.1.0",
+    "pluggy>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.24.0",
+    "rich>=13.0.0",
+    "pytest>=7.0.0",
+    "coverage>=7.0.0"
+]
