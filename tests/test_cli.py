@@ -1,10 +1,12 @@
 """Tests for the lmi CLI entry point."""
 
+import json
 import subprocess
 import sys
-import json
+
 import click
 from click.testing import CliRunner
+
 from lmi.__main__ import cli, format_output
 
 
@@ -38,8 +40,8 @@ def test_cli_output_json(monkeypatch, tmp_path):
     monkeypatch.setattr("lmi.config.ENV_DIR", env_dir)
     monkeypatch.setattr("lmi.config.MAIN_ENV_FILE", main_env)
     # Patch AuthenticatedClient to a dummy in both lmi.auth and lmi.__main__
-    import lmi.auth
     import lmi.__main__ as lmi_main
+    import lmi.auth
     class DummyClient:
         def __init__(self, *a, **k): pass
     monkeypatch.setattr(lmi.auth, "AuthenticatedClient", DummyClient)
@@ -64,3 +66,91 @@ def test_cli_help():
     assert result.exit_code == 0
     assert "--output" in result.output
     assert "Output format" in result.output
+
+def setup_dummy_env(monkeypatch, tmp_path):
+    config_dir = tmp_path / ".config" / "lmi"
+    env_dir = config_dir / "env"
+    env_dir.mkdir(parents=True)
+    main_env = config_dir / ".env"
+    env_file = env_dir / "testenv.env"
+    main_env.write_text("default_environment=testenv\n")
+    env_file.write_text("")
+    monkeypatch.setattr("lmi.config.CONFIG_DIR", config_dir)
+    monkeypatch.setattr("lmi.config.ENV_DIR", env_dir)
+    monkeypatch.setattr("lmi.config.MAIN_ENV_FILE", main_env)
+
+
+def test_plugin_install_success(monkeypatch, tmp_path):
+    setup_dummy_env(monkeypatch, tmp_path)
+    runner = CliRunner()
+    class Result:
+        returncode = 0
+        stderr = ""
+    monkeypatch.setattr("subprocess.run", lambda *a, **k: Result())
+    result = runner.invoke(cli, ["plugin", "install", "some-plugin"])
+    assert result.exit_code == 0
+    assert "installed successfully" in result.output
+
+def test_plugin_install_failure(monkeypatch, tmp_path):
+    setup_dummy_env(monkeypatch, tmp_path)
+    runner = CliRunner()
+    class Result:
+        returncode = 1
+        stderr = "Install failed"
+    monkeypatch.setattr("subprocess.run", lambda *a, **k: Result())
+    result = runner.invoke(cli, ["plugin", "install", "bad-plugin"])
+    assert result.exit_code != 0
+    assert "Failed to install plugin" in result.output
+
+def test_plugin_uninstall_success(monkeypatch, tmp_path):
+    setup_dummy_env(monkeypatch, tmp_path)
+    runner = CliRunner()
+    class Result:
+        returncode = 0
+        stderr = ""
+    monkeypatch.setattr("subprocess.run", lambda *a, **k: Result())
+    result = runner.invoke(cli, ["plugin", "uninstall", "some-plugin"])
+    assert result.exit_code == 0
+    assert "uninstalled successfully" in result.output
+
+def test_plugin_uninstall_failure(monkeypatch, tmp_path):
+    setup_dummy_env(monkeypatch, tmp_path)
+    runner = CliRunner()
+    class Result:
+        returncode = 1
+        stderr = "Uninstall failed"
+    monkeypatch.setattr("subprocess.run", lambda *a, **k: Result())
+    result = runner.invoke(cli, ["plugin", "uninstall", "bad-plugin"])
+    assert result.exit_code != 0
+    assert "Failed to uninstall plugin" in result.output
+
+def test_plugin_list(monkeypatch, tmp_path):
+    setup_dummy_env(monkeypatch, tmp_path)
+    runner = CliRunner()
+    class Ep:
+        def __init__(self, name, value, dist_name):
+            self.name = name
+            self.value = value
+            class Dist:
+                name = dist_name
+            self.dist = Dist()
+    fake_eps = [Ep("foo", "foo.module:Plugin", "foo-pkg"), Ep("bar", "bar.module:Plugin", "bar-pkg")]
+    def fake_entry_points():
+        return {"lmi_plugins": fake_eps}
+    def fake_version(name):
+        return {"foo-pkg": "1.2.3", "bar-pkg": "0.9.8"}[name]
+    monkeypatch.setattr("importlib.metadata.entry_points", fake_entry_points)
+    monkeypatch.setattr("importlib.metadata.version", fake_version)
+    result = runner.invoke(cli, ["plugin", "list"])
+    assert result.exit_code == 0
+    assert "foo" in result.output
+    assert "bar" in result.output
+    assert "1.2.3" in result.output
+
+def test_plugin_list_empty(monkeypatch, tmp_path):
+    setup_dummy_env(monkeypatch, tmp_path)
+    runner = CliRunner()
+    monkeypatch.setattr("importlib.metadata.entry_points", lambda: {"lmi_plugins": []})
+    result = runner.invoke(cli, ["plugin", "list"])
+    assert result.exit_code == 0
+    assert "No plugins installed" in result.output

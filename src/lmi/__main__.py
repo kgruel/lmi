@@ -9,6 +9,7 @@ from lmi.config import load_config
 from lmi.logging import setup_logging
 from lmi.plugins import CliContext, plugin_manager
 
+
 def create_cli():
     @click.group()
     @click.version_option("0.1.0", message="%(version)s")
@@ -44,6 +45,7 @@ def create_cli():
             verbose: Verbosity level (0=WARNING, 1=INFO, 2=DEBUG)
             no_file_log: Disable file logging
             output: Output format (json, ...)
+
         """
         setup_logging(verbosity=verbose, disable_file=no_file_log)
         logging.getLogger(__name__).info("lmi CLI starting up")
@@ -61,10 +63,59 @@ def create_cli():
             logging.getLogger(__name__).error(f"Config error: {e}")
             click.echo(f"Config error: {e}", err=True)
             raise click.Abort() from e
+
+    @cli.group()
+    def plugin():
+        """Manage lmi plugins (install, uninstall, list)."""
+
+    @plugin.command()
+    @click.argument("package")
+    @click.option("--index-url", help="Custom package index URL (optional)")
+    def install(package, index_url):
+        """Install a plugin from PyPI or a custom index."""
+        import subprocess
+        cmd = ["uv", "pip", "install", package]
+        if index_url:
+            cmd += ["--index-url", index_url]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if result.returncode == 0:
+            click.echo(f"Plugin '{package}' installed successfully.")
+        else:
+            click.echo(result.stderr, err=True)
+            raise click.ClickException(f"Failed to install plugin '{package}'")
+
+    @plugin.command()
+    @click.argument("package")
+    def uninstall(package):
+        """Uninstall a plugin by package name."""
+        import subprocess
+        cmd = ["uv", "pip", "uninstall", "-y", package]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if result.returncode == 0:
+            click.echo(f"Plugin '{package}' uninstalled successfully.")
+        else:
+            click.echo(result.stderr, err=True)
+            raise click.ClickException(f"Failed to uninstall plugin '{package}'")
+
+    @plugin.command()
+    def list():
+        """List installed lmi plugins and their versions."""
+        import importlib.metadata
+        plugins = importlib.metadata.entry_points().get("lmi_plugins", [])
+        if not plugins:
+            click.echo("No plugins installed.")
+            return
+        data = [
+            {"name": ep.name, "module": ep.value, "version": importlib.metadata.version(ep.dist.name)}
+            for ep in plugins
+        ]
+        format_output(data, output_format="json")
+
     return cli
 
 # Output formatting utility
 import json as _json
+
 
 def format_output(data, output_format: str = "json"):
     if output_format == "json":

@@ -103,13 +103,16 @@ This plan breaks the MVP into iterative, testable components, each building on t
 
 ---
 
-## 8. Plugin Lifecycle Commands
+## 8. Plugin Lifecycle Commands [COMPLETED]
 - **Description:**
   - Implement CLI commands to install, uninstall, and list plugins (internal/external sources).
 - **Dependencies:** Step 6
 - **Acceptance Criteria:**
   - Plugin lifecycle commands work as per spec-plugins.md and PRD (Plugin Lifecycle)
   - Plugins can be managed via CLI
+- **Status:**
+  - Completed: [2024-06-13]
+  - Summary: Added `plugin` command group to the CLI with `install`, `uninstall`, and `list` subcommands. Installation and uninstallation use `uv pip` for dependency management, and listing inspects the `lmi_plugins` entry points. All commands are tested with pytest, using a dummy environment for isolation. All tests and linters pass except for minor docstring and line length warnings unrelated to functionality. Plugin lifecycle management is now fully spec-compliant.
 
 ---
 

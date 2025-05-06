@@ -1,6 +1,6 @@
-import pytest
 import click
 from click.testing import CliRunner
+
 from lmi.plugins import PluginManager, hookimpl
 
 
