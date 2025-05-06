@@ -30,3 +30,7 @@ exclude = [".venv", "__pycache__", ".git", ".ruff_cache"]
 
 [project.scripts]
 lmi = "lmi.__main__:cli"
+
+[project.entry-points.lmi_plugins]
+# Example: 'my_plugin = my_package.my_plugin:PluginClass'
+# Plugins can be added here by external packages or for testing
