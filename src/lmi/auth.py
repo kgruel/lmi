@@ -95,7 +95,6 @@ class AuthenticatedClient:
             # Discard cache and retry
             save_token(self.env_name, {})  # Invalidate cache
             self.token = acquire_token(self.config, self.config.get("OAUTH_GRANT_TYPE", "client_credentials"))
-            save_token(self.env_name, self.token)
             self.client.headers["Authorization"] = f"Bearer {self.token['access_token']}"
             resp = self.client.request(method, url, **kwargs)
         return resp

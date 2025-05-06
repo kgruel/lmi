@@ -77,3 +77,55 @@ def test_missing_required(monkeypatch) -> None:
         load_config(environment="testenv")
     assert "Missing required config" in str(exc.value)
     shutil.rmtree(temp_dir)
+
+
+def test_missing_environment(monkeypatch):
+    temp_dir = Path(tempfile.mkdtemp())
+    config_dir = temp_dir / ".config" / "lmi"
+    env_dir = config_dir / "env"
+    env_dir.mkdir(parents=True)
+    main_env = config_dir / ".env"
+    main_env.write_text("")  # No default_environment
+    monkeypatch.setattr("lmi.config.CONFIG_DIR", config_dir)
+    monkeypatch.setattr("lmi.config.ENV_DIR", env_dir)
+    monkeypatch.setattr("lmi.config.MAIN_ENV_FILE", main_env)
+    with pytest.raises(RuntimeError) as exc:
+        load_config(environment=None)
+    assert "No environment specified" in str(exc.value)
+    shutil.rmtree(temp_dir)
+
+
+def test_missing_env_file(monkeypatch):
+    temp_dir = Path(tempfile.mkdtemp())
+    config_dir = temp_dir / ".config" / "lmi"
+    env_dir = config_dir / "env"
+    env_dir.mkdir(parents=True)
+    main_env = config_dir / ".env"
+    main_env.write_text("default_environment=testenv\n")
+    monkeypatch.setattr("lmi.config.CONFIG_DIR", config_dir)
+    monkeypatch.setattr("lmi.config.ENV_DIR", env_dir)
+    monkeypatch.setattr("lmi.config.MAIN_ENV_FILE", main_env)
+    with pytest.raises(RuntimeError) as exc:
+        load_config(environment="testenv")
+    assert "Environment file not found" in str(exc.value)
+    shutil.rmtree(temp_dir)
+
+
+def test_missing_oauth_required_key(monkeypatch):
+    temp_dir = Path(tempfile.mkdtemp())
+    config_dir = temp_dir / ".config" / "lmi"
+    env_dir = config_dir / "env"
+    env_dir.mkdir(parents=True)
+    main_env = config_dir / ".env"
+    env_file = env_dir / "testenv.env"
+    main_env.write_text("default_environment=testenv\n")
+    env_file.write_text("")
+    monkeypatch.setattr("lmi.config.CONFIG_DIR", config_dir)
+    monkeypatch.setattr("lmi.config.ENV_DIR", env_dir)
+    monkeypatch.setattr("lmi.config.MAIN_ENV_FILE", main_env)
+    monkeypatch.setattr("lmi.config.REQUIRED_CONFIG_KEYS", [])
+    # Remove OAUTH_CLIENT_ID from env
+    with pytest.raises(RuntimeError) as exc:
+        load_config(environment="testenv", require_oauth=True)
+    assert "Missing required config" in str(exc.value)
+    shutil.rmtree(temp_dir)
