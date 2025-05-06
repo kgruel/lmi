@@ -19,7 +19,7 @@ This plan breaks the MVP into iterative, testable components, each building on t
 
 ---
 
-## 2. Configuration Loading
+## 2. Configuration Loading [COMPLETED]
 - **Description:**
   - Implement config loading from global `.env`, environment-specific `.env`, OS environment variables, and CLI args, with correct precedence.
   - Error on missing required config.
@@ -27,6 +27,10 @@ This plan breaks the MVP into iterative, testable components, each building on t
 - **Acceptance Criteria:**
   - Config is resolved as per spec-config.md and PRD (FR1.1, FR2, FR4, FR4.1, FR4.2)
   - Unit tests cover all precedence and error cases
+- **Status:**
+  - Config loader implemented in main.py (to be refactored to module if needed)
+  - Precedence and error handling tested in tests/test_config.py
+  - All tests and linting pass as of this commit
 
 ---
 
