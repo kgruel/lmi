@@ -1,0 +1,158 @@
+---
+description: 
+globs: *test*.py,**/tests/**/*.py
+alwaysApply: false
+---
+
+# Modern Python Testing Conventions
+
+## Critical Rules
+
+- Use pytest as the primary testing framework instead of unittest
+- Structure tests in functions rather than classes unless needed for complex fixtures
+- Name test files with `test_` prefix and test functions with `test_` prefix
+- Use descriptive test names that explain the behavior being tested, not implementation
+- Group tests in directories/files based on functionality, not implementation structure
+- Use fixtures (`@pytest.fixture`) for test setup and teardown
+- Use parameterized tests (`@pytest.mark.parametrize`) for testing multiple inputs
+- Apply test isolation - tests should not depend on other tests
+- Mock external dependencies and I/O operations using `pytest-mock`
+- Use `monkeypatch` for modifying environment variables and builtins
+- Assert expected exceptions with `pytest.raises` context manager
+- Use fixture factories for creating complex test data
+- Apply markers (`@pytest.mark`) to categorize tests (slow, integration, etc.)
+- Skip tests conditionally with clear reasons using `@pytest.mark.skipif`
+- Implement snapshot testing for complex outputs using `pytest-snapshot`
+- Use `tmp_path` fixture instead of hardcoded temporary files
+- Implement property-based testing with `hypothesis` for complex inputs
+- Use `assert` statements directly instead of assertion methods
+- Include both positive and negative test cases
+- Test edge cases explicitly with specific test functions
+- Implement integration tests separately from unit tests
+- Use coverage tools (`pytest-cov`) to measure and enforce test coverage
+- Implement CI pipeline for automated test execution
+- Avoid test implementation details of modules, focus on behavior testing
+- Use fake time libraries (`freezegun`, `time-machine`) to test time-dependent code
+- Apply test-driven development (TDD) where appropriate (write tests first)
+- Keep tests fast - aim for under 100ms per unit test
+- Use `conftest.py` for shared fixtures and plugins
+- Use tox or nox for testing across Python versions and environments
+- Implement end-to-end tests for critical user workflows
+
+## Examples
+
+<example>
+  # Good modern Python testing
+  import pytest
+  from freezegun import freeze_time
+  from pathlib import Path
+  
+  from myapp.user import create_user, UserCreationError
+  
+  @pytest.fixture
+  def valid_user_data():
+      return {
+          "username": "testuser",
+          "email": "test@example.com",
+          "age": 30
+      }
+  
+  @pytest.fixture
+  def user_db(tmp_path):
+      """Create a temporary user database."""
+      db_path = tmp_path / "users.db"
+      # Setup code
+      yield db_path
+      # Teardown code if needed
+  
+  def test_create_user_success(valid_user_data, user_db):
+      """Test that valid user data creates a user successfully."""
+      user_id = create_user(valid_user_data, db_path=user_db)
+      assert user_id is not None
+      assert isinstance(user_id, str)
+      assert len(user_id) == 36  # UUID format
+  
+  @pytest.mark.parametrize("invalid_field, invalid_value", [
+      ("email", "not-an-email"),
+      ("age", -5),
+      ("username", ""),
+  ])
+  def test_create_user_validation_error(valid_user_data, user_db, invalid_field, invalid_value):
+      """Test that invalid user data raises appropriate validation errors."""
+      # Create a copy and modify one field
+      invalid_data = valid_user_data.copy()
+      invalid_data[invalid_field] = invalid_value
+      
+      with pytest.raises(UserCreationError) as exc_info:
+          create_user(invalid_data, db_path=user_db)
+      
+      assert invalid_field in str(exc_info.value)
+  
+  @freeze_time("2023-01-01")
+  def test_user_creation_timestamp():
+      """Test that user creation includes the correct timestamp."""
+      user = create_user({"username": "time_test", "email": "time@example.com"})
+      assert user.created_at.isoformat() == "2023-01-01T00:00:00+00:00"
+  
+  @pytest.mark.slow
+  @pytest.mark.integration
+  def test_user_database_integration(user_db):
+      """Test full user database integration (marked as slow)."""
+      # Integration test code here
+      pass
+</example>
+
+<example type="invalid">
+  # Outdated Python testing patterns
+  import unittest
+  import os
+  import tempfile
+  
+  class TestUser(unittest.TestCase):
+      # Using unittest TestCase instead of pytest functions
+      
+      def setUp(self):
+          # Using setUp instead of fixtures
+          self.temp_dir = tempfile.mkdtemp()
+          self.db_path = os.path.join(self.temp_dir, "users.db")
+          self.valid_user = {
+              "username": "testuser",
+              "email": "test@example.com",
+              "age": 30
+          }
+      
+      def tearDown(self):
+          # Manual cleanup instead of fixture management
+          import shutil
+          shutil.rmtree(self.temp_dir)
+      
+      def test_1_create_user(self):
+          # Bad: test with numeric prefix suggesting order dependency
+          from myapp.user import create_user
+          user_id = create_user(self.valid_user, self.db_path)
+          self.assertIsNotNone(user_id)
+          # Using unittest assertion methods instead of assert
+          
+      def test_2_depends_on_previous(self):
+          # Bad: test depends on previous test
+          # ...test implementation
+          pass
+      
+      def test_invalid_email(self):
+          # Separate test for each case instead of parameterized tests
+          invalid_data = self.valid_user.copy()
+          invalid_data["email"] = "not-an-email"
+          
+          from myapp.user import create_user, UserCreationError
+          try:
+              create_user(invalid_data, self.db_path)
+              self.fail("Should have raised UserCreationError")
+          except UserCreationError as e:
+              self.assertIn("email", str(e))
+  
+      # Missing tests for edge cases and negative scenarios
+      
+  if __name__ == "__main__":
+      # Running tests directly instead of using pytest
+      unittest.main()
+</example>

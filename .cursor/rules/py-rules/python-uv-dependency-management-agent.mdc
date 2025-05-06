@@ -1,0 +1,44 @@
+---
+description: This rule defines the required practices for using uv as the dependency management and installation tool in Python projects. It applies whenever dependencies are added, updated, installed, or managed, and when setting up or maintaining development environments. The rule is critical for ensuring reproducible, fast, and secure dependency management, and must be referenced during onboarding, CI/CD setup, and when troubleshooting environment issues. It is relevant for all contributors and automation agents working with Python projects that specify uv as the dependency manager.
+globs: 
+alwaysApply: false
+---
+# Python Dependency Management with `uv`
+
+## Critical Rules
+
+- Always use `uv` for installing, updating, and managing dependencies (never use `pip`, `pip-tools`, or `poetry` unless explicitly required for migration or compatibility).
+- Use `uv pip install -r requirements.txt` or `uv pip install .[dev]` for installing dependencies in development and CI environments.
+- Use `uv venv` to create virtual environments instead of `python -m venv` or `virtualenv`.
+- When adding new dependencies, update the appropriate requirements or project files and use `uv pip install` to ensure lockfile and environment consistency.
+- Document the use of `uv` in project onboarding and development guides.
+- Prefer `uv` subcommands for all package management tasks (e.g., `uv pip freeze`, `uv pip list`).
+- Ensure CI/CD pipelines use `uv` for all dependency installation steps.
+- If a developer encounters issues with `pip`, they should first try the equivalent `uv` command.
+- Do not mix `uv` and other dependency managers in the same workflow or environment.
+- If a package is not installable via `uv`, document the exception and notify the team.
+
+## Examples
+
+<example>
+  # Correct usage in a development environment
+  $ uv venv .venv
+  $ source .venv/bin/activate
+  $ uv pip install -e .[dev]
+  $ uv pip list
+
+  # In CI pipeline
+  - name: Install dependencies
+    run: uv pip install -e .[dev]
+</example>
+
+<example type="invalid">
+  # Incorrect: Using pip directly
+  $ python -m venv .venv
+  $ source .venv/bin/activate
+  $ pip install -e .[dev]
+
+  # Incorrect: Mixing pip and uv
+  $ uv pip install -r requirements.txt
+  $ pip install some-other-package
+</example>

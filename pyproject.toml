@@ -10,6 +10,20 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx>=0.24.0",
     "rich>=13.0.0",
-    "pytest>=7.0.0",
-    "coverage>=7.0.0"
 ]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "coverage>=7.8.0",
+    "pytest>=8.3.5",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "I", "N", "D", "UP", "B", "C4", "T20", "A", "COM", "DTZ", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "TCH", "ARG", "PTH", "ERA", "PL", "RUF"]
+ignore = []
+exclude = [".venv", "__pycache__", ".git", ".ruff_cache"]

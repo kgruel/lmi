@@ -1,21 +1,35 @@
-import os
-import tempfile
+"""Tests for lmi.config configuration loading logic."""
+
 import shutil
+import tempfile
+from pathlib import Path
+
 import pytest
+
 from lmi.config import load_config
 
-def write_env_file(path, content):
-    with open(path, 'w') as f:
+
+def write_env_file(path: Path, content: str) -> None:
+    """Write content to an environment file.
+
+    Args:
+        path: Path to the file.
+        content: Content to write.
+
+    """
+    with path.open("w") as f:
         f.write(content)
 
-def test_config_precedence(monkeypatch):
+
+def test_config_precedence(monkeypatch) -> None:
+    """Test configuration precedence: CLI args > OS env > env file > main .env."""
     # Setup temp config dirs/files
-    temp_dir = tempfile.mkdtemp()
-    config_dir = os.path.join(temp_dir, ".config", "lmi")
-    env_dir = os.path.join(config_dir, "env")
-    os.makedirs(env_dir)
-    main_env = os.path.join(config_dir, ".env")
-    env_file = os.path.join(env_dir, "testenv.env")
+    temp_dir = Path(tempfile.mkdtemp())
+    config_dir = temp_dir / ".config" / "lmi"
+    env_dir = config_dir / "env"
+    env_dir.mkdir(parents=True)
+    main_env = config_dir / ".env"
+    env_file = env_dir / "testenv.env"
 
     # Write main .env
     write_env_file(main_env, "FOO=main\ndefault_environment=testenv\nBAR=mainbar\n")
@@ -44,13 +58,15 @@ def test_config_precedence(monkeypatch):
 
     shutil.rmtree(temp_dir)
 
-def test_missing_required(monkeypatch):
-    temp_dir = tempfile.mkdtemp()
-    config_dir = os.path.join(temp_dir, ".config", "lmi")
-    env_dir = os.path.join(config_dir, "env")
-    os.makedirs(env_dir)
-    main_env = os.path.join(config_dir, ".env")
-    env_file = os.path.join(env_dir, "testenv.env")
+
+def test_missing_required(monkeypatch) -> None:
+    """Test that missing required config keys raises an error."""
+    temp_dir = Path(tempfile.mkdtemp())
+    config_dir = temp_dir / ".config" / "lmi"
+    env_dir = config_dir / "env"
+    env_dir.mkdir(parents=True)
+    main_env = config_dir / ".env"
+    env_file = env_dir / "testenv.env"
     write_env_file(main_env, "default_environment=testenv\n")
     write_env_file(env_file, "")
     monkeypatch.setattr("lmi.config.CONFIG_DIR", config_dir)
@@ -60,4 +76,4 @@ def test_missing_required(monkeypatch):
     with pytest.raises(RuntimeError) as exc:
         load_config(environment="testenv")
     assert "Missing required config" in str(exc.value)
-    shutil.rmtree(temp_dir) 
+    shutil.rmtree(temp_dir)
