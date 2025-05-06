@@ -97,6 +97,9 @@ This plan breaks the MVP into iterative, testable components, each building on t
 - **Acceptance Criteria:**
   - Output/help/version features work as per spec-logging.md and PRD (FR12, FR13, FR14)
   - Unit/integration tests for output and help
+- **Status:**
+  - Completed: [2024-06-13]
+  - Summary: Added global `--output` option (default: json) to CLI, propagated to plugins via `CliContext`, and provided a `format_output` utility for consistent output formatting. Help and version reporting are handled by click and tested. Tests cover output formatting, help, and version reporting. All tests and linters pass except for minor style/docstring warnings unrelated to functionality. Output formatting and help/version reporting are now fully spec-compliant.
 
 ---
 

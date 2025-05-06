@@ -29,13 +29,21 @@ def create_cli():
         default=False,
         help="Disable file logging",
     )
-    def cli(environment: str | None, verbose: int, no_file_log: bool) -> None:
+    @click.option(
+        "--output",
+        type=click.Choice(["json"], case_sensitive=False),
+        default="json",
+        show_default=True,
+        help="Output format (default: json). Output is sent to STDOUT for scripting. Plugins may support additional formats.",
+    )
+    def cli(environment: str | None, verbose: int, no_file_log: bool, output: str) -> None:
         """lmi: Unified Platform CLI.
 
         Args:
             environment: Optional environment name to load configuration from.
             verbose: Verbosity level (0=WARNING, 1=INFO, 2=DEBUG)
             no_file_log: Disable file logging
+            output: Output format (json, ...)
         """
         setup_logging(verbosity=verbose, disable_file=no_file_log)
         logging.getLogger(__name__).info("lmi CLI starting up")
@@ -45,7 +53,7 @@ def create_cli():
             # Prepare context for plugins
             logger = logging.getLogger("lmi.plugins")
             client = AuthenticatedClient(config, environment or config.get("default_environment"))
-            global_flags = {"environment": environment, "verbose": verbose, "no_file_log": no_file_log}
+            global_flags = {"environment": environment, "verbose": verbose, "no_file_log": no_file_log, "output": output}
             context = CliContext(config, logger, client, global_flags)
             # Register plugins
             plugin_manager.register_plugins(cli, context)
@@ -54,6 +62,15 @@ def create_cli():
             click.echo(f"Config error: {e}", err=True)
             raise click.Abort() from e
     return cli
+
+# Output formatting utility
+import json as _json
+
+def format_output(data, output_format: str = "json"):
+    if output_format == "json":
+        click.echo(_json.dumps(data, indent=2, ensure_ascii=False))
+    else:
+        click.echo(str(data))
 
 cli = create_cli()
 
