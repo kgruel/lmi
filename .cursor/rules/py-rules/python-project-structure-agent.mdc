@@ -1,0 +1,49 @@
+---
+description: This rule defines the standard directory and file structure for Python projects to ensure maintainability, scalability, and ease of collaboration. It must be applied when creating a new Python project, refactoring an existing project, or reviewing project structure for compliance. The rule is relevant for any project that aims to be production-ready, open source, or team-developed. It covers the placement of source code, tests, and documentation, as well as configuration and development best practices. Adhering to this rule prevents codebase sprawl, simplifies onboarding, improves CI/CD integration, and ensures a clear separation of concerns. It is especially important when preparing a project for public release, handoff, or team scaling. The rule should be referenced during project initialization, code reviews, and before major releases to ensure the project structure remains consistent and professional.
+globs: 
+alwaysApply: false
+---
+# Python Project Structure Standards
+
+## Critical Rules
+
+- All source code must reside in the `src/` directory
+- All test code must reside in the `tests/` directory, mirroring the source structure where possible
+- All documentation must reside in the `docs/` directory
+- No source, test, or documentation files should be placed in the project root
+- The project root must contain a `pyproject.toml` for configuration and a `README.md` for project overview
+- Use virtual environments for development (e.g., `.venv/` or `env/`)
+- Follow PEP 8 for code style and use type hints throughout the codebase
+- Use `pytest` for all testing
+- Use `ruff` or `flake8` for linting and code quality checks
+- Organize source code as importable packages/modules under `src/`
+- Do not place scripts or entry points directly in the project root; use a `src/` submodule or a `scripts/` directory if needed
+- Keep configuration, CI, and tool files (e.g., `.gitignore`, `.editorconfig`, `.pre-commit-config.yaml`) in the project root
+- Do not commit virtual environment or build artifact directories (e.g., `.venv/`, `dist/`, `build/`)
+
+## Examples
+
+<example>
+  Project root contains:
+    - src/main.py
+    - tests/conftest.py
+    - docs/usage.md
+    - pyproject.toml
+    - README.md
+    - .gitignore
+  All source code is under src/, all tests under tests/, all docs under docs/. No code or docs in the root except config and README.md.
+</example>
+
+<example type="invalid">
+  Project root contains:
+    - main.py
+    - test_main.py
+    - usage.md
+    - mymodule.py
+  Source, tests, and docs are mixed in the root directory. This violates the structure rule.
+</example>
+
+---
+description: This rule defines the standard directory and file structure for Python projects to ensure maintainability, scalability, and ease of collaboration. It must be applied when creating a new Python project, refactoring an existing project, or reviewing project structure for compliance. The rule is relevant for any project that aims to be production-ready, open source, or team-developed. It covers the placement of source code, tests, and documentation, as well as configuration and development best practices. Adhering to this rule prevents codebase sprawl, simplifies onboarding, improves CI/CD integration, and ensures a clear separation of concerns. It is especially important when preparing a project for public release, handoff, or team scaling. The rule should be referenced during project initialization, code reviews, and before major releases to ensure the project structure remains consistent and professional.
+globs: 
+alwaysApply: false
