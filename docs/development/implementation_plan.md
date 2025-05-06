@@ -34,7 +34,7 @@ This plan breaks the MVP into iterative, testable components, each building on t
 
 ---
 
-## 3. Logging System
+## 3. Logging System [COMPLETED]
 - **Description:**
   - Implement file and console logging using `logging` and `rich`.
   - Support verbosity flags and config-based log control.
@@ -43,12 +43,12 @@ This plan breaks the MVP into iterative, testable components, each building on t
   - Logging works as per spec-logging.md and PRD (FR7)
   - Log output is testable and configurable
 - **Status:**
-  - Completed: [DATE]
-  - Summary: Added src/lmi/logging.py, integrated setup_logging in CLI, added CLI options for verbosity and file log control, ensured logs include timestamps, level, and source, and updated docs/tests as needed.
+  - Completed: [2024-06-11]
+  - Summary: Added `src/lmi/logging.py` for unified logging (file + rich console), integrated logging setup in CLI, added CLI options for verbosity and file log control, ensured logs include timestamps, level, and source, and confirmed all tests and linters pass. CLI entry point and logging are now fully spec-compliant.
 
 ---
 
-## 4. Authentication & Token Caching
+## 4. Authentication & Token Caching [COMPLETED]
 - **Description:**
   - Implement OAuth Client Credentials and Password Grant flows.
   - Implement token caching, expiry check, and refresh on 401.
@@ -56,6 +56,9 @@ This plan breaks the MVP into iterative, testable components, each building on t
 - **Acceptance Criteria:**
   - Auth flows and token caching work as per spec-auth.md and PRD (FR6, FR6.1)
   - Unit/integration tests for token acquisition, caching, and refresh
+- **Status:**
+  - Completed: [2024-06-12]
+  - Summary: Added `src/lmi/auth.py` for OAuth2 authentication, token caching, expiry, and refresh logic. Integrated config key requirements, ensured all tests and linters pass, and provided full test coverage for token management. Implementation is spec-compliant and ready for plugin integration.
 
 ---
 

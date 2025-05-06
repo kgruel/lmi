@@ -42,8 +42,3 @@ alwaysApply: false
     - mymodule.py
   Source, tests, and docs are mixed in the root directory. This violates the structure rule.
 </example>
-
----
-description: This rule defines the standard directory and file structure for Python projects to ensure maintainability, scalability, and ease of collaboration. It must be applied when creating a new Python project, refactoring an existing project, or reviewing project structure for compliance. The rule is relevant for any project that aims to be production-ready, open source, or team-developed. It covers the placement of source code, tests, and documentation, as well as configuration and development best practices. Adhering to this rule prevents codebase sprawl, simplifies onboarding, improves CI/CD integration, and ensures a clear separation of concerns. It is especially important when preparing a project for public release, handoff, or team scaling. The rule should be referenced during project initialization, code reviews, and before major releases to ensure the project structure remains consistent and professional.
-globs: 
-alwaysApply: false

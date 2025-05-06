@@ -9,14 +9,19 @@ CONFIG_DIR = Path.home() / ".config" / "lmi"
 ENV_DIR = CONFIG_DIR / "env"
 MAIN_ENV_FILE = CONFIG_DIR / ".env"
 
-REQUIRED_CONFIG_KEYS: list[str] = [
-    # Add required config keys here, e.g. 'OAUTH_CLIENT_ID', 'OAUTH_CLIENT_SECRET', etc.
+REQUIRED_CONFIG_KEYS: list[str] = []
+OAUTH_REQUIRED_KEYS = [
+    "OAUTH_CLIENT_ID",
+    "OAUTH_CLIENT_SECRET",
+    "OAUTH_TOKEN_URL",
+    # Add more as needed for Password Grant
 ]
 
 
 def load_config(
     cli_args: dict[str, str] | None = None,
     environment: str | None = None,
+    require_oauth: bool = False,
 ) -> dict[str, str]:
     """Load configuration with precedence.
 
@@ -29,6 +34,7 @@ def load_config(
     Args:
         cli_args: Optional dictionary of CLI arguments.
         environment: Optional environment name.
+        require_oauth: Whether to require OAuth keys.
 
     Returns:
         dict[str, str]: Loaded configuration.
@@ -60,7 +66,10 @@ def load_config(
         config.update({k: v for k, v in cli_args.items() if v is not None})
 
     # Check required keys
-    missing = [k for k in REQUIRED_CONFIG_KEYS if k not in config or not config[k]]
+    required_keys = REQUIRED_CONFIG_KEYS.copy()
+    if require_oauth:
+        required_keys += OAUTH_REQUIRED_KEYS
+    missing = [k for k in required_keys if k not in config or not config[k]]
     if missing:
         msg = f"Missing required config: {', '.join(missing)}"
         raise RuntimeError(msg)
