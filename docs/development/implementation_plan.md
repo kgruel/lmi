@@ -62,7 +62,7 @@ This plan breaks the MVP into iterative, testable components, each building on t
 
 ---
 
-## 5. CLI Command Structure
+## 5. CLI Command Structure [COMPLETED]
 - **Description:**
   - Implement CLI entry point using `click`.
   - Support global options, environment selection, and command parsing.
@@ -70,6 +70,9 @@ This plan breaks the MVP into iterative, testable components, each building on t
 - **Acceptance Criteria:**
   - CLI structure matches spec-core.md and PRD (FR9, FR13, FR14)
   - `lmi --help` and `lmi --version` work
+- **Status:**
+  - Completed: [2024-06-12]
+  - Summary: Added `src/lmi/__main__.py` as the click-based CLI entry point, supporting global options for environment, verbosity, and file logging. Registered the CLI in `pyproject.toml` as a script. Verified that `lmi --help` and `lmi --version` work as expected. Test coverage for CLI version command is present in `tests/test_cli.py`. All tests and linters pass except for unrelated docstring/lint issues in auth.py, which do not affect CLI functionality.
 
 ---
 
