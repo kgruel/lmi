@@ -2,7 +2,7 @@ import os
 import tempfile
 import shutil
 import pytest
-from lmi.__main__ import load_config
+from lmi.config import load_config
 
 def write_env_file(path, content):
     with open(path, 'w') as f:
@@ -23,9 +23,9 @@ def test_config_precedence(monkeypatch):
     write_env_file(env_file, "FOO=env\nBAZ=envbaz\n")
 
     # Patch config paths
-    monkeypatch.setattr("lmi.__main__.CONFIG_DIR", config_dir)
-    monkeypatch.setattr("lmi.__main__.ENV_DIR", env_dir)
-    monkeypatch.setattr("lmi.__main__.MAIN_ENV_FILE", main_env)
+    monkeypatch.setattr("lmi.config.CONFIG_DIR", config_dir)
+    monkeypatch.setattr("lmi.config.ENV_DIR", env_dir)
+    monkeypatch.setattr("lmi.config.MAIN_ENV_FILE", main_env)
 
     # No overrides
     config = load_config(environment="testenv")
@@ -53,10 +53,10 @@ def test_missing_required(monkeypatch):
     env_file = os.path.join(env_dir, "testenv.env")
     write_env_file(main_env, "default_environment=testenv\n")
     write_env_file(env_file, "")
-    monkeypatch.setattr("lmi.__main__.CONFIG_DIR", config_dir)
-    monkeypatch.setattr("lmi.__main__.ENV_DIR", env_dir)
-    monkeypatch.setattr("lmi.__main__.MAIN_ENV_FILE", main_env)
-    monkeypatch.setattr("lmi.__main__.REQUIRED_CONFIG_KEYS", ["FOO", "BAR"])
+    monkeypatch.setattr("lmi.config.CONFIG_DIR", config_dir)
+    monkeypatch.setattr("lmi.config.ENV_DIR", env_dir)
+    monkeypatch.setattr("lmi.config.MAIN_ENV_FILE", main_env)
+    monkeypatch.setattr("lmi.config.REQUIRED_CONFIG_KEYS", ["FOO", "BAR"])
     with pytest.raises(RuntimeError) as exc:
         load_config(environment="testenv")
     assert "Missing required config" in str(exc.value)
