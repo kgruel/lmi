@@ -27,3 +27,6 @@ line-length = 88
 select = ["E", "F", "W", "I", "N", "D", "UP", "B", "C4", "T20", "A", "COM", "DTZ", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "TCH", "ARG", "PTH", "ERA", "PL", "RUF"]
 ignore = []
 exclude = [".venv", "__pycache__", ".git", ".ruff_cache"]
+
+[project.scripts]
+lmi = "lmi.__main__:cli"

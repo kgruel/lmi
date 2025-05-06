@@ -126,4 +126,6 @@ This plan breaks the MVP into iterative, testable components, each building on t
 ## Iterative Delivery Notes
 - Each step should be merged only when independently testable and passing CI.
 - Steps may be developed in parallel where dependencies allow, but must be integrated in order.
-- Future enhancements (post-MVP) are tracked separately. 
+- Future enhancements (post-MVP) are tracked separately.
+
+- [x] FR1: Provide a command-line executable named `lmi` via [project.scripts] in pyproject.toml. Confirmed available and working. 
