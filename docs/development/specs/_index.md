@@ -8,8 +8,8 @@ The specifications in this directory translate high-level product requirements i
 
 ## Specifications Index
 
-- [spec-core.md](spec-core.md): Core CLI architecture, configuration, authentication, and command structure.
-- [spec-plugins.md](spec-plugins.md): Plugin system, plugin lifecycle, and extension interface.
+- [spec-core.md](spec-core.md): Core CLI architecture, configuration, authentication, command structure, input from STDIN.
+- [spec-plugins.md](spec-plugins.md): Plugin system, plugin lifecycle, extension interface, input from STDIN.
 - [spec-logging.md](spec-logging.md): Logging, error handling, and output formatting.
 - [spec-config.md](spec-config.md): Configuration sources, precedence, and environment management.
 - [spec-auth.md](spec-auth.md): OAuth authentication flows, token caching, and refresh logic.

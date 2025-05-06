@@ -33,6 +33,12 @@ This specification defines the core architecture of the `lmi` CLI, covering the 
 - Use `click` for CLI parsing and help system.
 - Provide context-aware help via `--help` at all levels.
 - Version reporting via `--version` (core and loaded plugin versions).
+- **Input from STDIN:**
+  - Commands that accept input data (e.g., JSON, YAML, or text) must support a `--file <path>` option, where `--file -` reads from STDIN.
+  - When `--file -` is specified, the CLI reads input from STDIN (e.g., piped data or redirected file).
+  - If both `--file` and positional arguments are provided, `--file` takes precedence for input data.
+  - The CLI must provide clear error messages if STDIN is empty or input is invalid.
+  - Plugins are encouraged to adopt the same convention for input data.
 
 ### 5. Plugin Readiness
 - Use `pluggy` to discover/load plugin commands (via entry points).

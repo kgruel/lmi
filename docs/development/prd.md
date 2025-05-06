@@ -112,6 +112,7 @@ Date: May 5, 2025
 - **FR13:** Context-aware help via `--help` at all levels (root, service group, action) using `click`.
 - **FR14:** Version reporting via `--version` (core and loaded plugin versions).
 - **FR15:** Plugins register their `click` command groups via a `pluggy` hook (`register_commands`).
+- **FR16:** Commands that accept input data (e.g., JSON, YAML, or text) must support a `--file <path>` option, where `--file -` reads from STDIN. The CLI must provide clear error messages if STDIN is empty or input is invalid. Plugins are encouraged to follow the same convention.
 - **Plugin Lifecycle:** CLI must provide commands to install, uninstall, and list plugins (supporting internal/external repos as configured).
 
 ### Non-Functional Requirements
@@ -128,15 +129,15 @@ Date: May 5, 2025
 
 ## 7. Design & Architecture
 
-- **Core:** Python app using `click` (CLI), `pluggy` (plugins), `python-dotenv` (config), `logging` + `rich` (logging), `httpx` (HTTP). Handles orchestration, config precedence, auth (with caching/refresh), context, I/O, help, and versioning.
-- **Plugins:** Separate Python packages using `pluggy` hooks to register `click` commands. Use provided context (including authenticated `httpx` client) for backend interaction.
+- **Core:** Python app using `click` (CLI), `pluggy` (plugins), `python-dotenv` (config), `logging` + `rich` (logging), `httpx` (HTTP). Handles orchestration, config precedence, auth (with caching/refresh), context, I/O, help, and versioning, and **input from STDIN via --file -**.
+- **Plugins:** Separate Python packages using `pluggy` hooks to register `click` commands. Use provided context (including authenticated `httpx` client) for backend interaction. Plugins are encouraged to support `--file -` for STDIN input.
 - *(See High-Level Architecture Overview for details)*
 
 ---
 
 ## 8. Release Criteria / Minimum Viable Product (MVP)
 
-- Core `lmi` executable meeting all functional requirements (FR1, FR1.1, FR2, FR4, FR4.1, FR4.2, FR7–FR15, Plugin Lifecycle)
+- Core `lmi` executable meeting all functional requirements (FR1, FR1.1, FR2, FR4, FR4.1, FR4.2, FR7–FR16, Plugin Lifecycle)
 - Authentication: Demonstrate Client Credentials & Password grant auth, with token caching and refresh on 401
 - Output/help/version: JSON output, help system, version reporting
 - Plugin loading: Discover/load a test/example plugin (e.g., "hello" or "ping")
@@ -150,7 +151,6 @@ Date: May 5, 2025
 - Service plugins (e.g., `lmi-plugin-accsvc`, `lmi-plugin-clientmgr`, `lmi-plugin-oauthsvc`)
 - Additional output formats (tables, plain text)
 - Support for more OAuth flows (e.g., Auth Code + PKCE)
-- Input from STDIN (`--file -`)
 - Plugin lifecycle commands (already MVP)
 - Shell autocompletion (bash, zsh, fish)
 - Generic response caching for plugins

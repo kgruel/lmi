@@ -32,6 +32,9 @@ This specification defines the plugin architecture for the `lmi` CLI, including 
 - Plugins must support the `--help` flag for their commands, using `click`'s help system.
 - Plugins may support additional output formats (e.g., tables, plain text) but must support JSON output by default.
 - Plugins are responsible for their own output schemas and formatting.
+- **Input from STDIN:**
+  - Plugin commands that accept input data (e.g., JSON, YAML, or text) are strongly encouraged to support a `--file <path>` option, where `--file -` reads from STDIN, following the core CLI convention.
+  - Plugins should provide clear error messages if STDIN is empty or input is invalid.
 
 ### 6. Versioning and Compatibility
 - The CLI must report both core and loaded plugin versions via `--version`.
