@@ -1,0 +1,29 @@
+site_name: lmi - Unified Platform CLI
+
+# Use the Terminal for MkDocs theme
+theme:
+  name: terminal
+  palette:
+    primary: green
+    accent: blue
+  hide:
+    - revision
+    - toc
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quickstart: quickstart.md
+      - Configuration: configuration.md
+      - Authentication: authentication.md
+  - Usage:
+      - Command Reference: command-reference.md
+      - Plugin System: plugin-system.md
+      - Logging & Output: logging-output.md
+      - Error Handling: error-handling.md
+      - Advanced Usage: advanced-usage.md
+  - Development:
+      - Development Guide: development-guide.md
+      - FAQ: faq.md
+      - Roadmap: roadmap.md
+      - Reference: reference.md
