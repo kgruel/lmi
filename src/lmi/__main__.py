@@ -1,6 +1,8 @@
 """Main entry point for the lmi CLI application."""
 
 import logging
+import sys
+from typing import Optional
 
 import click
 
@@ -122,6 +124,31 @@ def format_output(data, output_format: str = "json"):
         click.echo(_json.dumps(data, indent=2, ensure_ascii=False))
     else:
         click.echo(str(data))
+
+def read_input_file(file: Optional[str]) -> str:
+    """
+    Read input data from a file or STDIN.
+    If file is '-', read from sys.stdin.
+    Returns the input as a string.
+    Raises click.ClickException on error or empty input.
+    """
+    if file is None:
+        raise click.ClickException("No input file specified.")
+    if file == "-":
+        data = sys.stdin.read()
+        if not data.strip():
+            raise click.ClickException("STDIN is empty. Provide input data or use --file <path>.")
+        return data
+    try:
+        with open(file, encoding="utf-8") as f:
+            data = f.read()
+            if not data.strip():
+                raise click.ClickException(f"Input file '{file}' is empty.")
+            return data
+    except FileNotFoundError:
+        raise click.ClickException(f"Input file not found: {file}")
+    except Exception as e:
+        raise click.ClickException(f"Failed to read input file '{file}': {e}")
 
 cli = create_cli()
 

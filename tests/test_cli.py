@@ -3,11 +3,15 @@
 import json
 import subprocess
 import sys
+import io
+import tempfile
+import os
 
 import click
 from click.testing import CliRunner
+import pytest
 
-from lmi.__main__ import cli, format_output
+from lmi.__main__ import cli, format_output, read_input_file
 
 
 def test_cli_version() -> None:
@@ -226,3 +230,35 @@ def test_plugin_list_with_plugins(monkeypatch, tmp_path):
     assert result.exit_code == 0
     assert "foo" in result.output
     assert "1.2.3" in result.output
+
+def test_read_input_file_from_file(tmp_path):
+    file_path = tmp_path / "input.txt"
+    file_path.write_text("hello world\n")
+    assert read_input_file(str(file_path)) == "hello world\n"
+
+def test_read_input_file_from_file_empty(tmp_path):
+    file_path = tmp_path / "empty.txt"
+    file_path.write_text("")
+    with pytest.raises(click.ClickException) as exc:
+        read_input_file(str(file_path))
+    assert "empty" in str(exc.value)
+
+def test_read_input_file_file_not_found():
+    with pytest.raises(click.ClickException) as exc:
+        read_input_file("/nonexistent/file.txt")
+    assert "not found" in str(exc.value)
+
+def test_read_input_file_from_stdin(monkeypatch):
+    monkeypatch.setattr("sys.stdin", io.StringIO("data from stdin\n"))
+    assert read_input_file("-") == "data from stdin\n"
+
+def test_read_input_file_from_stdin_empty(monkeypatch):
+    monkeypatch.setattr("sys.stdin", io.StringIO("   \n"))
+    with pytest.raises(click.ClickException) as exc:
+        read_input_file("-")
+    assert "STDIN is empty" in str(exc.value)
+
+def test_read_input_file_none():
+    with pytest.raises(click.ClickException) as exc:
+        read_input_file(None)
+    assert "No input file specified" in str(exc.value)

@@ -22,4 +22,4 @@
   - Tests cover reading from files and STDIN, including error cases.
   - Documentation and CLI help updated.
 - **Status:**
-  - Not started 
+  - Completed: Utility function for --file/- input is implemented, tested, and ready for use in core and plugin commands. All tests and linter pass. 
