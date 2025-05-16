@@ -1,0 +1,129 @@
+---
+description: 
+globs: *.py
+alwaysApply: false
+---
+
+# Modern Python Coding Conventions
+
+## Critical Rules
+
+- Use type hints with modern syntax: `list[str]` instead of `List[str]` (PEP 585)
+- Follow PEP 8 naming conventions: `snake_case` for variables/functions, `PascalCase` for classes, `UPPER_CASE` for constants
+- Use f-strings for string formatting: `f"Hello {name}"` instead of `.format()` or `%`
+- Use `pathlib.Path` for file operations instead of string paths and `os.path`
+- Employ structural pattern matching (match/case) for complex conditionals (Python 3.10+)
+- Use walrus operator `:=` for assignment within expressions when appropriate
+- Implement `__slots__` for memory-efficient classes
+- Use `@dataclass` for data container classes instead of manually defining `__init__`, `__eq__`, etc.
+- Create virtual environments with `venv` or `pyenv` for dependency isolation
+- Manage dependencies with modern tools like Poetry or pip-tools
+- Organize imports in sections: standard library, third-party, local applications
+- Use context managers (`with` statement) for resource management
+- Prefer list/dict/set comprehensions over explicit loops when appropriate
+- Annotate return type `None` explicitly when a function doesn't return a value
+- Use `Optional[type]` or `type | None` (Python 3.10+) for potentially None values
+- Utilize `typing.TypedDict` for dictionaries with known keys and value types
+- Use specific exception types rather than broad exception catching
+- Write docstrings using Google or NumPy style with type annotations
+- Use `assert` statements for debugging, not for error handling in production
+- Configure code formatters (`black`) and linters (`ruff`) using `pyproject.toml`
+- Implement `__repr__` and `__str__` methods for better debugging output
+- Design for immutability when possible (frozen dataclasses, named tuples)
+- Use `Enum` classes for related constants instead of loose variables
+- Prefer composition over inheritance when designing class relationships
+- Apply `functools.cached_property` for expensive computed attributes
+- Run type checkers like `mypy` to validate type annotations
+- Use `collections.namedtuple` or `typing.NamedTuple` for simple data structures
+- Create iterator/generator functions to avoid loading large datasets into memory
+- Use `async`/`await` for I/O-bound operations rather than threading
+- Apply the `if __name__ == "__main__":` pattern for executable scripts
+
+## Examples
+
+<example>
+  # Good modern Python code
+  from pathlib import Path
+  from typing import Optional
+  from dataclasses import dataclass
+  from enum import Enum, auto
+  
+  class Color(Enum):
+      RED = auto()
+      GREEN = auto()
+      BLUE = auto()
+  
+  @dataclass(frozen=True)
+  class Rectangle:
+      width: float
+      height: float
+      color: Optional[Color] = None
+      
+      def area(self) -> float:
+          """Calculate the area of the rectangle.
+          
+          Returns:
+              The area as width * height
+          """
+          return self.width * self.height
+  
+  def process_data(items: list[str]) -> dict[str, int]:
+      """Process a list of string items.
+      
+      Args:
+          items: List of strings to process
+          
+      Returns:
+          Dictionary mapping items to their lengths
+      """
+      return {item: len(item) for item in items if (stripped := item.strip())}
+  
+  def main() -> None:
+      data_path = Path("data/items.txt")
+      with open(data_path, "r") as f:
+          items = f.read().splitlines()
+      
+      results = process_data(items)
+      print(f"Processed {len(results)} items")
+  
+  if __name__ == "__main__":
+      main()
+</example>
+
+<example type="invalid">
+  # Outdated Python code with anti-patterns
+  import os, sys, re
+  from typing import List, Dict, Any
+  
+  class rectangle:
+      def __init__(self, w, h, c=None):
+          self.w = w
+          self.h = h
+          self.c = c
+      
+      def get_area(self):
+          # No type annotations
+          return self.w * self.h
+  
+  def process_data(items):
+      # No type hints
+      results = {}
+      for i in range(len(items)):
+          item = items[i]
+          item = item.strip()
+          if item:
+              results[item] = len(item)
+      return results
+  
+  def main():
+      # String path concatenation instead of pathlib
+      data_path = os.path.join('data', 'items.txt')
+      f = open(data_path, 'r')
+      items = f.read().splitlines()
+      f.close()  # Not using context manager
+      
+      results = process_data(items)
+      print("Processed %d items" % len(results))  # Old string formatting
+  
+  main()  # No if __name__ == "__main__" guard
+</example>
