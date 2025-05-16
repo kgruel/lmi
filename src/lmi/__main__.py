@@ -7,6 +7,7 @@ from typing import Optional
 import click
 
 from lmi.auth import AuthenticatedClient
+from lmi.cli.auth import auth as auth_group
 from lmi.config import load_config
 from lmi.logging import setup_logging
 from lmi.plugins import CliContext, plugin_manager
@@ -65,6 +66,9 @@ def create_cli():
             logging.getLogger(__name__).error(f"Config error: {e}")
             click.echo(f"Config error: {e}", err=True)
             raise click.Abort() from e
+
+    # Add auth commands
+    cli.add_command(auth_group)
 
     @cli.group()
     def plugin():
