@@ -40,8 +40,16 @@ def create_cli():
         show_default=True,
         help="Output format (default: json). Output is sent to STDOUT for scripting. Plugins may support additional formats.",
     )
+    @click.option(
+        "-C",
+        "--config-override",
+        "cli_config_overrides",
+        multiple=True,
+        type=str,
+        help="Override a configuration key (e.g., -C OAUTH_TOKEN_URL=http://...)",
+    )
     @click.pass_context
-    def cli(ctx, environment: str | None, verbose: int, no_file_log: bool, output: str) -> None:
+    def cli(ctx, environment: str | None, verbose: int, no_file_log: bool, output: str, cli_config_overrides: tuple[str, ...]) -> None:
         """lmi: Unified Platform CLI.
 
         Args:
@@ -49,6 +57,7 @@ def create_cli():
             verbose: Verbosity level (0=WARNING, 1=INFO, 2=DEBUG)
             no_file_log: Disable file logging
             output: Output format (json, ...)
+            cli_config_overrides: List of KEY=VALUE pairs to override configuration
 
         """
         setup_logging(verbosity=verbose, disable_file=no_file_log)
@@ -59,6 +68,15 @@ def create_cli():
         ctx.obj["verbose"] = verbose
         ctx.obj["no_file_log"] = no_file_log
         ctx.obj["output"] = output
+        
+        # Parse config overrides
+        parsed_overrides = {}
+        for override in cli_config_overrides:
+            if '=' not in override:
+                raise click.BadParameter(f"Config overrides must be in KEY=VALUE format: {override}")
+            key, value = override.split('=', 1)
+            parsed_overrides[key] = value
+        ctx.obj["config_overrides"] = parsed_overrides
 
     # Add auth commands
     cli.add_command(auth_group)
@@ -73,8 +91,9 @@ def create_cli():
         verbose = ctx.obj.get("verbose")
         no_file_log = ctx.obj.get("no_file_log")
         output = ctx.obj.get("output")
+        config_overrides = ctx.obj.get("config_overrides", {})
         try:
-            config = load_config(environment=environment)
+            config = load_config(environment=environment, cli_args=config_overrides)
             logging.getLogger(__name__).info("Configuration loaded successfully")
             logger = logging.getLogger("lmi.plugins")
             client = AuthenticatedClient(config, environment or config.get("default_environment"))
