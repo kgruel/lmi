@@ -40,7 +40,8 @@ def create_cli():
         show_default=True,
         help="Output format (default: json). Output is sent to STDOUT for scripting. Plugins may support additional formats.",
     )
-    def cli(environment: str | None, verbose: int, no_file_log: bool, output: str) -> None:
+    @click.pass_context
+    def cli(ctx, environment: str | None, verbose: int, no_file_log: bool, output: str) -> None:
         """lmi: Unified Platform CLI.
 
         Args:
@@ -52,23 +53,39 @@ def create_cli():
         """
         setup_logging(verbosity=verbose, disable_file=no_file_log)
         logging.getLogger(__name__).info("lmi CLI starting up")
+        # Store global options in context for later use
+        ctx.ensure_object(dict)
+        ctx.obj["environment"] = environment
+        ctx.obj["verbose"] = verbose
+        ctx.obj["no_file_log"] = no_file_log
+        ctx.obj["output"] = output
+
+    # Add auth commands
+    cli.add_command(auth_group)
+
+    @cli.result_callback()
+    @click.pass_context
+    def process_result(ctx, *args, **kwargs):
+        # Only run if a subcommand was actually invoked (not for --help/--version)
+        if ctx.invoked_subcommand is None:
+            return
+        environment = ctx.obj.get("environment")
+        verbose = ctx.obj.get("verbose")
+        no_file_log = ctx.obj.get("no_file_log")
+        output = ctx.obj.get("output")
         try:
             config = load_config(environment=environment)
             logging.getLogger(__name__).info("Configuration loaded successfully")
-            # Prepare context for plugins
             logger = logging.getLogger("lmi.plugins")
             client = AuthenticatedClient(config, environment or config.get("default_environment"))
             global_flags = {"environment": environment, "verbose": verbose, "no_file_log": no_file_log, "output": output}
             context = CliContext(config, logger, client, global_flags)
             # Register plugins
-            plugin_manager.register_plugins(cli, context)
+            plugin_manager.register_plugins(ctx.command, context)
         except RuntimeError as e:
             logging.getLogger(__name__).error(f"Config error: {e}")
             click.echo(f"Config error: {e}", err=True)
             raise click.Abort() from e
-
-    # Add auth commands
-    cli.add_command(auth_group)
 
     @cli.group()
     def plugin():
