@@ -1,53 +1,135 @@
 # Authentication
 
 Understand how **lmi** handles authentication. This includes:
-- **User SSO Authentication**: For users to log in interactively via the company's Single Sign-On (SSO) to authorize CLI usage.
-- **Service Authentication**: OAuth flows (like Client Credentials) for authenticating the CLI to specific backend services based on environment configuration.
+- **User SSO Authentication**: For users to log in interactively via the company's Single Sign-On (SSO) using PKCE flow.
+- **Service Authentication**: OAuth flows (Client Credentials, Password Grant, Authorization Code + PKCE) for authenticating the CLI to specific backend services based on environment configuration.
 
 This document covers both, focusing on how tokens are acquired, cached, and used.
 
 ## 1. Supported OAuth Flows
 
+The CLI supports multiple OAuth grant types, configurable per environment:
+
 - **Client Credentials Grant**: For service-to-service authentication.
 - **Password Grant**: For user-based authentication (not recommended for production).
-- Other flows (e.g., Authorization Code + PKCE) are not supported in the MVP.
+- **Authorization Code + PKCE**: For secure user authentication with SSO integration.
 
-Authentication is triggered automatically based on your resolved configuration.
+The grant type is configured using the `OAUTH_GRANT_TYPE` environment variable or config setting:
+```bash
+# For service-to-service auth
+OAUTH_GRANT_TYPE=client_credentials
 
-## 2. Token Caching and Refresh
+# For user password auth (not recommended)
+OAUTH_GRANT_TYPE=password
 
-### Service Tokens
-- Tokens for service authentication (Client Credentials, Password Grant) are cached in `~/.cache/lmi/tokens/<env_name>.json` (or OS-appropriate location).
-- Before making requests to a service, lmi checks for a valid, non-expired cached token for that environment.
-- If a valid token is found, it is used. Otherwise, a new token is acquired based on the environment's configuration.
-- On receiving a 401 Unauthorized from a service, lmi discards the cached service token, acquires a new one, and retries once.
-- If service token refresh fails, a clear error is reported.
+# For SSO/PKCE auth
+OAUTH_GRANT_TYPE=authorization_code_pkce
+```
 
-### User SSO Tokens
-- Details about User SSO Authentication, including its own token management (using the OS keychain), are described in [User SSO Authentication](#3-user-sso-authentication).
+## 2. Token Management
 
-## 3. User SSO Authentication
+### Token Storage
+- All tokens are stored in `~/.cache/lmi/tokens/<env_name>.json` (or OS-appropriate location).
+- Tokens are stored using the `AuthToken` dataclass format, which includes:
+  - `access_token`: The OAuth access token
+  - `refresh_token`: Optional refresh token for token renewal
+  - `id_token`: Optional ID token for user information
+  - `expires_at`: Token expiration timestamp
+  - `token_type`: Token type (usually "Bearer")
+  - `issued_at`: Token issuance timestamp
 
-To ensure that only authorized company personnel can perform sensitive operations via the `lmi` CLI, an interactive SSO login flow is provided.
-- **Login Command**: `lmi login sso` (or similar) initiates a browser-based authentication with your company's IdP.
-- **Token Storage**: Successfully obtained SSO tokens (access, refresh, ID tokens) are stored securely in your operating system's keychain.
-- **Purpose**: A valid SSO session is a prerequisite for certain CLI commands or plugin features. This is independent of the service-specific authentication configured per environment.
-- **Logout Command**: `lmi logout sso` (or similar) clears your SSO session and tokens from the keychain.
-- **Status Command**: `lmi auth status` (or similar) shows your current SSO login status.
+### Token Refresh
+- Before making requests, lmi checks for a valid, non-expired cached token.
+- If a token is expired but has a refresh token, it will be automatically refreshed.
+- On receiving a 401 Unauthorized, lmi will:
+  1. Attempt to refresh the token if a refresh token is available
+  2. If refresh fails or no refresh token exists, acquire a new token
+  3. Retry the original request once with the new token
 
-For detailed technical specifications, see `docs/development/specs/spec-sso-login.md`.
+## 3. User SSO Authentication (PKCE Flow)
 
-## 4. Security Best Practices
+The PKCE (Proof Key for Code Exchange) flow provides secure user authentication:
+
+1. **Login Command**: 
+   ```bash
+   lmi auth login -e <env_name>
+   ```
+   This initiates the PKCE flow:
+   - Generates a code verifier and challenge
+   - Opens your browser to the SSO login page
+   - Starts a local HTTP server to receive the callback
+   - Exchanges the authorization code for tokens
+
+2. **Token Storage**: 
+   - Successfully obtained tokens are stored in the token cache
+   - Includes access token, refresh token, and ID token
+   - Tokens are automatically refreshed when expired
+
+3. **Logout Command**: 
+   ```bash
+   lmi auth logout -e <env_name>
+   ```
+   This clears the cached tokens for the specified environment.
+
+4. **Status Command**: 
+   ```bash
+   lmi auth status -e <env_name>
+   ```
+   Shows your current authentication status and token information.
+
+## 4. Environment-Specific Authentication
+
+Each environment can use a different authentication method:
+
+```bash
+# Development environment using client credentials
+[dev]
+OAUTH_GRANT_TYPE=client_credentials
+OAUTH_CLIENT_ID=dev-client
+OAUTH_CLIENT_SECRET=dev-secret
+OAUTH_TOKEN_URL=https://dev.example.com/token
+
+# Production environment using PKCE
+[prod]
+OAUTH_GRANT_TYPE=authorization_code_pkce
+OAUTH_CLIENT_ID=prod-client
+OAUTH_AUTHORIZE_URL=https://prod.example.com/authorize
+OAUTH_TOKEN_URL=https://prod.example.com/token
+```
+
+## 5. Security Best Practices
 
 - Store secrets (client secrets, passwords) in environment variables or env-specific `.env` files.
-- Do not store secrets in the main `.env` or pass them on the command line unless necessary.
-- You are responsible for securing your `.env` and token cache files.
-- lmi does not prompt for service secrets interactively; missing secrets result in errors. The SSO login flow is interactive via the browser.
+- Do not store secrets in the main `.env` or pass them on the command line.
+- The token cache directory (`~/.cache/lmi/tokens/`) should have restricted permissions.
+- For PKCE flow, ensure your browser's security settings allow localhost callbacks.
+- Regularly rotate client secrets and credentials.
+- Use environment-specific configurations to separate development and production credentials.
 
-## 5. Troubleshooting Authentication
+## 6. Troubleshooting Authentication
 
-- If you see authentication errors, check that your environment config has the correct client ID, secret, and service URL.
-- Ensure your token cache file is not corrupted or expired.
-- Use `-v` or `-vv` for more detailed error output.
-- If you need to clear the **service token cache**, delete the relevant file in `~/.cache/lmi/tokens/`.
-- For SSO issues, ensure you can log into your company's IdP via a browser. Use `lmi auth status` (or similar) to check your SSO login status. If problems persist, consult your IdP administrator or the `lmi` documentation (`docs/development/specs/spec-sso-login.md`). 
+### Common Issues
+
+1. **Token Expiration**:
+   - Symptoms: 401 Unauthorized errors
+   - Solution: Run `lmi auth login -e <env_name>` to re-authenticate
+
+2. **PKCE Flow Issues**:
+   - Browser doesn't open: Check `OAUTH_AUTHORIZE_URL` configuration
+   - Callback fails: Ensure no firewall is blocking localhost
+   - Token exchange fails: Verify `OAUTH_TOKEN_URL` and client configuration
+
+3. **Token Cache Issues**:
+   - Corrupted cache: Delete `~/.cache/lmi/tokens/<env_name>.json`
+   - Permission issues: Check directory permissions
+   - Invalid tokens: Run `lmi auth logout -e <env_name>` then login again
+
+### Debugging
+
+- Use `-v` or `-vv` for detailed logging
+- Check token status: `lmi auth status -e <env_name>`
+- Verify configuration: `lmi config show -e <env_name>`
+- For SSO issues, ensure you can log into your IdP via browser
+- Check logs for specific error messages
+
+For more technical details, see the [Development Guide](development-guide.md). 

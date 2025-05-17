@@ -31,9 +31,15 @@ The CLI is installed as `lmi` (see `pyproject.toml`).
 - Secrets (e.g., client secrets) should be set via env vars or env-specific `.env` files.
 
 ## Authentication
-- Supports OAuth2 Client Credentials & Password Grant flows
+- Supports multiple authentication methods:
+  - OAuth2 Client Credentials & Password Grant flows
+  - SSO token authentication (recommended for enterprise environments)
 - Tokens cached in `~/.cache/lmi/tokens/<env>.json`
 - Automatic token refresh on 401 Unauthorized
+- For SSO authentication:
+  - Set `LMI_SSO_TOKEN` environment variable or in env-specific `.env` file
+  - Token is automatically used when available, falling back to OAuth2 if not present
+  - SSO tokens are validated and refreshed automatically
 
 ## Logging
 - File logs: `~/.local/share/lmi/lmi.log` (configurable, disable with `--no-file-log`)
