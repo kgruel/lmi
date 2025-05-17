@@ -10,7 +10,7 @@ hookspec = pluggy.HookspecMarker("lmi")
 hookimpl = pluggy.HookimplMarker("lmi")
 
 class CliContext:
-    def __init__(self, config: dict[str, str], logger: Any, http_client: Any, global_flags: dict[str, Any]):
+    def __init__(self, config: dict[str, str], logger: Any, http_client: auth.AuthenticatedClient, global_flags: dict[str, Any]):
         """Context object passed to plugins.
         
         Args:
@@ -23,49 +23,45 @@ class CliContext:
         self.logger = logger
         self.http_client = http_client
         self.global_flags = global_flags
-        self._auth_token: Optional[AuthToken] = None
 
     @property
     def auth_token(self) -> Optional[AuthToken]:
-        """Get current authentication token.
+        """Get current authentication token from the authenticated HTTP client.
         
         Returns:
             Optional[AuthToken]: Current authentication token if available.
         """
-        if self._auth_token is None:
-            try:
-                # Only get token if required config is present
-                if "OAUTH_GRANT_TYPE" in self.config:
-                    self._auth_token = auth.get_token(self.config, "default", allow_interactive_for_new=False)
-            except Exception as e:
-                self.logger.warning(f"Failed to get auth token: {e}")
-        return self._auth_token
+        if self.http_client and hasattr(self.http_client, 'token'):
+            return self.http_client.token
+        return None
 
     def is_authenticated(self) -> bool:
-        """Check if user is authenticated.
+        """Check if user is authenticated based on the http_client's token.
         
         Returns:
             bool: True if user is authenticated and token is valid.
         """
-        if not self.auth_token:
+        token = self.auth_token
+        if not token:
             return False
-        return not self.auth_token.is_expired
+        return not token.is_expired
 
     def get_auth_status(self) -> dict[str, Any]:
-        """Get authentication status.
+        """Get authentication status from the http_client's token.
         
         Returns:
             dict[str, Any]: Status information including login state and token details.
         """
-        if not self.auth_token:
-            return {"logged_in": False, "error": "Authentication not configured"}
+        token = self.auth_token
+        if not token:
+            return {"logged_in": False, "error": "Authentication client not available or token missing"}
         
         return {
-            "logged_in": not self.auth_token.is_expired,
-            "token_type": self.auth_token.token_type,
-            "expires_at": self.auth_token.expires_at,
-            "has_refresh_token": bool(self.auth_token.refresh_token),
-            "has_id_token": bool(self.auth_token.id_token)
+            "logged_in": not token.is_expired,
+            "token_type": token.token_type,
+            "expires_at": token.expires_at,
+            "has_refresh_token": bool(token.refresh_token),
+            "has_id_token": bool(token.id_token)
         }
 
 class PluginSpec:

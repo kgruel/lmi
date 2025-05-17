@@ -96,7 +96,7 @@ Date: May 5, 2025
   4. Main `.env` config file
   5. Built-in defaults (if any)
 - **FR4.2:** Missing required config (with no default) results in a clear error.
-- **FR6:** Automatic authentication based on resolved config (OAuth Client Credentials & Password grants). Other flows (e.g., Auth Code + PKCE) are future work.
+- **FR6:** Automatic authentication based on resolved config. Supported OAuth grant types for MVP include: Client Credentials, Password, and Authorization Code with PKCE.
 - **FR6.1:** Automatic OAuth token caching:
   - Cache tokens in `~/.cache/lmi/tokens/<env_name>.json` (or similar, OS conventions respected).
   - Check for valid, non-expired cached token before requests.
@@ -123,7 +123,8 @@ Date: May 5, 2025
 - **NFR5 (Security):** Secrets should be sourced from OS env vars or env-specific `.env` files. Users are responsible for securing these files. Storing secrets in main `.env` or CLI args discouraged. Tokens cached securely (user responsibility).
 - **NFR6 (Maintainability):** Core and plugins as distinct Python packages. Core: 100% test coverage. Plugins: self-managed. Code style: PEP 8, type hints, tests for config loading, auth, and token logic.
 - **NFR7 (Extensibility):** Plugin interface clearly documented for easy plugin development/distribution.
-- **NFR8 (Compatibility):** Supported: Linux, macOS (x86_64, ARM64), Windows (via WSL2). Python 3.11+. Install via `uv`.
+- **NFR8 (Compatibility):** Supported: Linux, macOS (x86_64, ARM64), Windows (via WSL2). Python 3.13+. Install via `uv`.
+- **NFR9 (Keyring & Secret Management):** No system keyring or advanced OS-level secret management in the MVP. The `keyring` library dependency has been removed to simplify initial dependencies. Secure storage of secrets in user-managed `.env` files or environment variables remains the primary mechanism. This may be revisited in future iterations if strong demand for system keyring integration arises.
 
 ---
 
@@ -156,7 +157,7 @@ Date: May 5, 2025
 - Generic response caching for plugins
 - Built-in workflow commands (e.g., `lmi workflow run create-standard-user`)
 - Opt-in telemetry
-- System keyring integration for secrets
+- System keyring integration for secrets (Deferred: No longer a direct MVP consideration, `keyring` dependency removed for simplification)
 - Project-local config files
 
 ---
@@ -178,7 +179,7 @@ Date: May 5, 2025
 6. **Error Handling & Interactivity:**
    - The CLI will use a standard exception stack that denotes error domains (e.g., core, plugin, auth, backend). The CLI is strictly non-interactive; missing configuration or secrets will result in errors, not prompts.
 7. **Keyring & Secret Management:**
-   - No keyring or advanced secret management in the MVP. This will be considered in a future iteration.
+   - No system keyring or advanced OS-level secret management in the MVP. The `keyring` library dependency has been removed to simplify initial dependencies. Secure storage of secrets in user-managed `.env` files or environment variables remains the primary mechanism. This may be revisited in future iterations if strong demand for system keyring integration arises.
 8. **Testing & Plugin Quality:**
    - The core CLI will maintain 100% test coverage. Plugins are responsible for their own testing and quality. The core will provide a mechanism to install published plugins (primarily from internal repositories, configurable via a command). The core is only responsible for providing a consistent set of globals and hookpoints for plugins.
 9. **Platform Support:**

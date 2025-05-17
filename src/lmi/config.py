@@ -14,21 +14,14 @@ OAUTH_REQUIRED_KEYS = [
     "OAUTH_CLIENT_ID",
     "OAUTH_CLIENT_SECRET",
     "OAUTH_TOKEN_URL",
-    # Add more as needed for Password Grant
-]
-
-# SSO-specific configuration keys
-SSO_REQUIRED_KEYS = [
-    "OAUTH_SSO_CLIENT_ID",
-    "OAUTH_SSO_AUTHORIZATION_URL",
-    "OAUTH_SSO_TOKEN_URL",
+    # OAUTH_AUTHORIZE_URL is needed for PKCE, but might not always be required
+    # if only client_credentials is used. Add dynamically or ensure present when PKCE is grant_type.
 ]
 
 def load_config(
     cli_args: dict[str, str] | None = None,
     environment: str | None = None,
     require_oauth: bool = False,
-    require_sso: bool = False,
 ) -> dict[str, str]:
     """Load configuration with precedence.
 
@@ -42,7 +35,6 @@ def load_config(
         cli_args: Optional dictionary of CLI arguments.
         environment: Optional environment name.
         require_oauth: Whether to require OAuth keys.
-        require_sso: Whether to require SSO keys.
 
     Returns:
         dict[str, str]: Loaded configuration.
@@ -77,8 +69,6 @@ def load_config(
     required_keys = REQUIRED_CONFIG_KEYS.copy()
     if require_oauth:
         required_keys += OAUTH_REQUIRED_KEYS
-    if require_sso:
-        required_keys += SSO_REQUIRED_KEYS
     missing = [k for k in required_keys if k not in config or not config[k]]
     if missing:
         msg = f"Missing required config: {', '.join(missing)}"
